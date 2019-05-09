@@ -1,5 +1,4 @@
 import { t } from '../util/locale';
-import { actionChangeTags } from '../actions/change_tags';
 import { actionOrthogonalize } from '../actions/orthogonalize';
 import { geoOrthoCanOrthogonalize } from '../geo';
 import { utilDisplayLabel } from '../util';
@@ -24,9 +23,6 @@ export function validationUnsquareWay() {
     var validation = function checkUnsquareWay(entity, context) {
         var graph = context.graph();
         if (!isBuilding(entity, graph)) return [];
-
-        // don't flag ways marked as physically unsquare
-        if (entity.tags.nosquare === 'yes') return [];
 
         var isClosed = entity.isClosed();
         if (!isClosed) return [];        // this building has bigger problems
@@ -76,24 +72,10 @@ export function validationUnsquareWay() {
                     title: t('issues.fix.square_feature.title'),
                     autoArgs: autoArgs,
                     onClick: function() {
-                        var entityId = this.issue.entityIds[0];
                         // note: use default params for actionOrthogonalize, not relaxed epsilon
                         context.perform(
-                            actionOrthogonalize(entityId, context.projection),
+                            actionOrthogonalize(entity.id, context.projection),
                             t('operations.orthogonalize.annotation.area')
-                        );
-                    }
-                }),
-                new validationIssueFix({
-                    title: t('issues.fix.tag_as_unsquare.title'),
-                    onClick: function() {
-                        var entityId = this.issue.entityIds[0];
-                        var entity = context.entity(entityId);
-                        var tags = Object.assign({}, entity.tags);  // shallow copy
-                        tags.nosquare = 'yes';
-                        context.perform(
-                            actionChangeTags(entityId, tags),
-                            t('issues.fix.tag_as_unsquare.annotation')
                         );
                     }
                 })
